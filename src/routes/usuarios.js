@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User'); // Ruta hacia el modelo de usuario
+const bcrypt = require('bcrypt');
 
 // Obtener usuarios
 router.get('/obtener_usuarios', async (req, res) => {
@@ -14,10 +15,10 @@ router.get('/obtener_usuarios', async (req, res) => {
 
 // Insertar usuario
 router.post('/insertar_usuario', async (req, res) => {
-  const { name, phone, department, tower, role } = req.body;
+  const { name, phone, department, tower, role, password } = req.body;
   try {
     // Validar datos
-    if (!name || !phone || !department || !tower || !role) {
+    if (!name || !phone || !department || !tower || !role || !password) {
       return res.status(400).json({ message: 'Todos los campos son obligatorios' });
     }
 
@@ -27,7 +28,8 @@ router.post('/insertar_usuario', async (req, res) => {
       phone,
       department,
       tower,
-      role, // Cambié 'profile' por 'role' para hacerlo consistente con el segundo archivo
+      role,
+      password, // Incluir la contraseña
     });
 
     const savedUser = await newUser.save();
@@ -38,14 +40,14 @@ router.post('/insertar_usuario', async (req, res) => {
   }
 });
 
-// Log in: Buscar usuario por teléfono y verificar rol
+// Autenticar usuario con teléfono y contraseña
 router.post('/login', async (req, res) => {
-  const { phone } = req.body;
+  const { phone, password } = req.body;
 
   try {
-    // Validar si el teléfono fue proporcionado
-    if (!phone) {
-      return res.status(400).json({ message: 'El número de teléfono es obligatorio.' });
+    // Validar si el teléfono y la contraseña fueron proporcionados
+    if (!phone || !password) {
+      return res.status(400).json({ message: 'El número de teléfono y la contraseña son obligatorios.' });
     }
 
     // Buscar al usuario por su número de teléfono
@@ -56,82 +58,54 @@ router.post('/login', async (req, res) => {
       return res.status(404).json({ message: 'Usuario no encontrado.' });
     }
 
-    // Verificar si el rol del usuario es "Administrador"
-    if (user.role === 'Administrador') {
-      return res.status(200).json({
-        message: 'Usuario autenticado',
-        redirectTo: '/admin', // Redirigir al administrador
-        userData: {
-          name: user.name,
-          role: user.role,
-          department: user.department,
-          tower: user.tower
-        }
-      });
+    // Verificar la contraseña
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Contraseña incorrecta.' });
     }
 
-    // Si el rol no es Administrador
+    // Si el usuario es autenticado correctamente
     return res.status(200).json({
       message: 'Usuario autenticado',
       userData: {
         name: user.name,
         role: user.role,
         department: user.department,
-        tower: user.tower
-      }
+        tower: user.tower,
+      },
     });
-
   } catch (error) {
     console.error('Error al intentar loguearse:', error);
     res.status(500).json({ message: 'Error al intentar loguearse.', error });
   }
 });
 
-// Nueva ruta para verificar teléfono y verificar si el rol es 'Administrador'
-router.post('/verificarTelefono', async (req, res) => {
-  const { phone } = req.body;
-
+// Ruta para obtener los datos de un departamento
+router.get('/obtener_datos_departamento', async (req, res) => {
   try {
-    // Validar si el teléfono fue proporcionado
-    if (!phone) {
-      return res.status(400).json({ message: 'El número de teléfono es obligatorio.' });
+    const { departamento } = req.query;
+
+    if (!departamento) {
+      return res.status(400).json({ error: "El parámetro 'departamento' es requerido" });
     }
 
-    // Buscar al usuario por su número de teléfono
-    const user = await User.findOne({ phone });
+    // Buscar el usuario asociado al departamento
+    const usuario = await User.findOne({ department: departamento });
 
-    // Si no se encuentra el usuario
-    if (!user) {
-      return res.status(404).json({ message: 'Usuario no encontrado.' });
+    if (!usuario) {
+      return res.status(404).json({ error: "Departamento no encontrado" });
     }
 
-    // Verificar si el rol del usuario es 'Administrador'
-    if (user.role === 'Administrador') {
-      return res.status(200).json({
-        message: 'Usuario es Administrador',
-        userData: {
-          name: user.name,
-          role: user.role,
-          department: user.department,
-          tower: user.tower
-        }
-      });
-    }
-
-    // Si el rol no es 'Administrador', solo devuelve los datos del usuario
-    return res.status(200).json({
-      message: 'Usuario autenticado, pero no es Administrador',
-      userData: {
-        name: user.name,
-        role: user.role,
-        department: user.department,
-        tower: user.tower
-      }
+    // Devolver los datos del departamento
+    res.json({
+      departamento: usuario.department,
+      usuario: usuario.phone, // O el campo que identifique al usuario
+      nombreCompleto: usuario.name,
+      torre: usuario.tower,
     });
-
   } catch (error) {
-    console.error('Error al verificar el teléfono:', error);
-    res.status(500).json({ message: 'Error al verificar el teléfono.', error });
+    console.error("Error al obtener los datos del departamento:", error);
+    res.status(500).json({ error: "Error al obtener los datos del departamento" });
   }
 });
 

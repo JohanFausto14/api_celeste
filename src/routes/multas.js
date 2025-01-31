@@ -8,20 +8,27 @@ router.post("/insertar_multas", async (req, res) => {
   try {
     const { usuario, nombreCompleto, departamento, torre, multa, descripcion, fecha } = req.body;
 
+    // Validar campos obligatorios
     if (!usuario || !nombreCompleto || !departamento || !torre || !multa || !descripcion || !fecha) {
       return res.status(400).json({ message: "Todos los campos son obligatorios" });
     }
 
+    // Validar que el departamento no sea 1 (administrador)
+    if (departamento === "1") {
+      return res.status(400).json({ message: "No se puede multar al departamento 1 (administrador)" });
+    }
+
+    // Crear y guardar la multa
     const nuevaMulta = new Multa({ usuario, nombreCompleto, departamento, torre, multa, descripcion, fecha });
     await nuevaMulta.save();
 
-    // Crear y guardar notificación
+    // Crear y guardar la notificación
     const nuevaNotificacion = new Notificacion({
       usuario,
       departamento,
       multa,
       descripcion,
-      fecha,
+      fecha: new Date(fecha), // Asegurar que la fecha esté en formato Date
     });
     await nuevaNotificacion.save();
 
@@ -46,9 +53,9 @@ router.get("/obtener_multas", async (req, res) => {
       multa: multa.multa,
       descripcion: multa.descripcion,
       fecha: new Date(multa.fecha).toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
         year: "numeric",
-        month: "long",
-        day: "numeric",
       }),
     }));
 
