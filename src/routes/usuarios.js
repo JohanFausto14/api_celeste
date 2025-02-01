@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User'); // Ruta hacia el modelo de usuario
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // Obtener usuarios
 router.get('/obtener_usuarios', async (req, res) => {
