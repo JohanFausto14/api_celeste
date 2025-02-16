@@ -1,19 +1,18 @@
 const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
-const protect = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-
-  if (!token) {
-    return res.status(401).json({ message: "No autorizado, falta el token" });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Agrega la información del usuario al request
-    next();
-  } catch (error) {
-    res.status(401).json({ message: "Token inválido" });
-  }
+const verificarToken = (req, res, next) => {
+    const token = req.header("Authorization");
+    if (!token) {
+        return res.status(401).json({ message: "Acceso denegado. No hay token." });
+    }
+    try {
+        const decoded = jwt.verify(token.replace("Bearer ", ""), process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        res.status(401).json({ message: "Token inválido." });
+    }
 };
 
-module.exports = protect;
+module.exports = verificarToken;
