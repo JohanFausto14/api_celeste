@@ -20,7 +20,7 @@ app.use(express.json());
 
 app.use((req, res, next) => {
     const origin = req.headers.origin || req.headers.host; // Obtener el origen o el host
-    if (origin === "http://localhost:5000" || origin === "localhost:5000") {
+    if (origin === "https://condominio-johan.vercel.app/" || origin === "https://condominio-johan.vercel.app/") {
         next(); // Permitir la solicitud
     } else {
         res.status(403).json({ error: 'Acceso no permitido' }); // Denegar la solicitud
