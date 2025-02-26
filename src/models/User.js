@@ -12,16 +12,19 @@ const UserSchema = new mongoose.Schema({
 
 // Hash de la contraseña antes de guardar el usuario
 UserSchema.pre('save', async function (next) {
-  if (this.isModified('password') || this.isNew) {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+  if (this.isModified('password')) {
+    if (!this.password.startsWith('$2a$')) { // Evita doble hash
+      const salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, salt);
+    }
   }
   next();
 });
 
+
 // Método para comparar contraseñas
 UserSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
 const User = mongoose.model('User', UserSchema);
