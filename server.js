@@ -7,6 +7,7 @@ const user = require("./src/routes/usuarios");
 const notificaciones = require("./src/routes/notificaciones");
 const login = require("./src/routes/login");
 const verificarToken = require("./src/middleware/authenticate");
+const whats = require("./src/routes/whatsapp");
 
 const app = express();
 
@@ -18,17 +19,19 @@ app.use(cors()); // Habilitar CORS
 app.use(express.json());
 
 
-app.use((req, res, next) => {
-    const origin = req.headers.origin || req.headers.host; // Obtener el origen o el host
-    if (origin === "https://condominio-johan.vercel.app" || origin === "https://condominio-johan.vercel.app") {
-        next(); 
-    } else {
-        res.status(403).json({ error: 'Acceso no permitido' }); // Denegar la solicitud
-    }
-});
+// app.use((req, res, next) => {
+//     const origin = req.headers.origin || req.headers.host; // Obtener el origen o el host
+//     if (origin === "https://condominio-johan.vercel.app" || origin === "https://condominio-johan.vercel.app") {
+//         next(); 
+//     } else {
+//         res.status(403).json({ error: 'Acceso no permitido' }); // Denegar la solicitud
+//     }
+// });
 
 
 app.use("/api", login);
+app.use("/api", whats);
+
 
 // Rutas que requieren autenticación
 app.use("/api", verificarToken, multas);
