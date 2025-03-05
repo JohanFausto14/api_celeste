@@ -3,7 +3,7 @@ const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const Whats = require('../models/whats');
-const User = require('../models/User'); // Importa el modelo de Usuario
+const User = require('../models/User'); 
 
 // Configuración de la API de WhatsApp Business
 const WHATSAPP_API_URL = 'https://graph.facebook.com/v22.0';
