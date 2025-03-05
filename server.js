@@ -6,7 +6,7 @@ const multas = require("./src/routes/multas");
 const user = require("./src/routes/usuarios");
 const notificaciones = require("./src/routes/notificaciones");
 const login = require("./src/routes/login");
-const verificarToken = require("./src/middleware/authenticate");
+// const verificarToken = require("./src/middleware/authenticate");
 const whats = require("./src/routes/whatsapp");
 
 const app = express();
@@ -34,9 +34,9 @@ app.use("/api", whats);
 
 
 // Rutas que requieren autenticación
-app.use("/api", verificarToken, multas);
-app.use("/api", verificarToken, user);
-app.use("/api", verificarToken, notificaciones);
+app.use("/api", multas);
+app.use("/api", user);
+app.use("/api", notificaciones);
 
 // Servidor
 const PORT = process.env.PORT || 4000;
